@@ -16,7 +16,7 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
-from app.models.organization import Organization
+from app.models.organization import Organization 
 from app.repositories.organization_repository import OrganizationRepository
 from app.services.base_service import BaseService
 from app.services.exceptions import ConflictError, NotFoundError, ValidationError

@@ -31,4 +31,11 @@ class CredentialRepository(BaseRepository[Credential, uuid.UUID]):
         )
 
         return self._session.scalars(stmt).first()
-   
+
+    def create(
+        self,
+        credential: Credential,
+    ) -> Credential:
+        """Create a new credential."""
+
+        return self.add(credential)
