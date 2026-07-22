@@ -47,7 +47,7 @@ class UserService(BaseService):
         username: str,
         email: str,
         primary_organization_id: uuid.UUID,
-        status: str = "active",
+      
     ) -> User:
         """Create a new user specializing an existing identity.
 
@@ -77,7 +77,7 @@ class UserService(BaseService):
                 username=username,
                 email=email,
                 primary_organization_id=primary_organization_id,
-                status=status,
+                status="active",
             )
             return self._users.add(user)
 

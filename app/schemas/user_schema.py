@@ -9,7 +9,6 @@ class UserCreate(BaseModel):
     identity_id: UUID
     username: str
     email: EmailStr
-    status: str
     primary_organization_id: UUID
 
 
@@ -17,7 +16,7 @@ class UserCreate(BaseModel):
 class UserUpdate(BaseModel):
     username: str | None = None
     email: EmailStr | None = None
-    status: str | None = None
+    
 
 
 # Response returned by API
@@ -26,7 +25,6 @@ class UserResponse(BaseModel):
     identity_id: UUID
     username: str
     email: EmailStr
-    status: str
     primary_organization_id: UUID
     created_at: datetime
     updated_at: datetime
