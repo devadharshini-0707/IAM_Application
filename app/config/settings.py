@@ -23,7 +23,7 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    flask_env: str = "development"
+    app_env: str = "development"
     secret_key: str
     database_url: str
     log_level: str = "INFO"

@@ -5,6 +5,7 @@ from sqlalchemy import pool
 
 from alembic import context
 from app.config.database import Base
+from app.config.settings import get_settings
 import app.models
 
 # this is the Alembic Config object, which provides
@@ -18,14 +19,12 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-# from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
 target_metadata = Base.metadata
 
-# other values from the config, defined by the needs of env.py,
-# can be acquired:
-# my_important_option = config.get_main_option("my_important_option")
-# ... etc.
+# Source the connection URL from application settings (.env), not the
+# static placeholder in alembic.ini, so no real credential needs to live
+# in a file that gets committed to version control.
+config.set_main_option("sqlalchemy.url", get_settings().database_url)
 
 
 def run_migrations_offline() -> None:

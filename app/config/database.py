@@ -1,10 +1,9 @@
 """Database engine and session management for the IAM application.
 
-This module is intentionally decoupled from Flask itself. Repositories and
-services receive a SQLAlchemy ``Session`` through constructor injection
-rather than reaching into a framework-global object, which keeps the data
-layer testable in isolation and keeps Flask an implementation detail of the
-web layer rather than a dependency of the domain layer.
+Repositories and services receive a SQLAlchemy ``Session`` through
+constructor injection rather than a framework-global object, which keeps
+the data layer testable in isolation and keeps FastAPI an implementation
+detail of the web layer rather than a dependency of the domain layer.
 """
 
 from __future__ import annotations
@@ -62,3 +61,23 @@ def get_db_session() -> Generator[Session, None, None]:
         raise
     finally:
         session.close()                 
+def get_db() -> Generator[Session, None, None]:
+    """FastAPI dependency yielding a request-scoped SQLAlchemy session.
+
+    Unlike ``get_db_session``, this is a plain generator (no
+    ``@contextmanager``) because FastAPI's ``Depends()`` system manages the
+    generator lifecycle itself -- calling ``next()`` before the route runs
+    and driving it to completion after, committing or rolling back exactly
+    once per request. Repositories and services never construct a session
+    themselves; they receive one through this dependency via constructor
+    injection at the route layer.
+    """
+    session = SessionFactory()
+    try:
+        yield session
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
