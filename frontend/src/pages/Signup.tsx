@@ -35,7 +35,7 @@ function Signup() {
 
             if (error.response) {
                 console.log("Status:", error.response.status);
-                console.log("Data:", error.response.data);
+                console.log(JSON.stringify(error.response.data, null, 2));
                 alert(JSON.stringify(error.response.data));
             } else {
                 alert(error.message);

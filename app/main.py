@@ -6,6 +6,7 @@ from app.routes import user_routes
 
 app = FastAPI(
     title="IAM Application",
+    debug=True,
 )
 
 app.add_middleware(

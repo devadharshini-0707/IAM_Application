@@ -60,7 +60,6 @@ class User(Base, TimestampMixin):
     organization_memberships: Mapped[list["UserOrganization"]] = relationship(
         "UserOrganization",
         back_populates="user",
-        foreign_keys="UserOrganization.user_id",
     )
     credentials: Mapped[list["Credential"]] = relationship(
         "Credential", back_populates="user"

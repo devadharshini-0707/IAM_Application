@@ -40,9 +40,10 @@ def get_auth_service(
 
     return AuthService(
         session=session,
+        user_repository=UserRepository(session),
+        credential_repository=CredentialRepository(session),
         organization_service=organization_service,
         identity_service=identity_service,
         user_service=user_service,
-        credential_repository=CredentialRepository(session),
         jwt_handler=JWTHandler(),
     )

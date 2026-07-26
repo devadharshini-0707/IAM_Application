@@ -19,7 +19,7 @@ class JWTHandler:
     def create_access_token(
         self,
         *,
-        user_id: str,
+        subject: str,
         organization_id: str,
     ) -> str:
         """Create JWT access token."""
@@ -29,7 +29,7 @@ class JWTHandler:
         )
 
         payload: dict[str, Any] = {
-            "sub": user_id,
+            "sub": subject,
             "organization_id": organization_id,
             "exp": expire,
         }
@@ -44,7 +44,7 @@ class JWTHandler:
         self,
         token: str,
     ) -> dict[str, Any]:
-        """Decode and validate JWT token."""
+        """Decode JWT token."""
 
         try:
             return jwt.decode(

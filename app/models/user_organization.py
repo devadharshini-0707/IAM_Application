@@ -61,12 +61,10 @@ class UserOrganization(Base):
     user: Mapped["User"] = relationship(
         "User",
         back_populates="organization_memberships",
-        foreign_keys=[user_id],
     )
     organization: Mapped["Organization"] = relationship(
         "Organization",
         back_populates="user_memberships",
-        foreign_keys=[organization_id],
     )
 
     def __repr__(self) -> str:

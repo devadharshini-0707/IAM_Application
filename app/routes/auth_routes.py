@@ -14,14 +14,13 @@ router = APIRouter(
 )
 
 
-@router.post(
-    "/signup",
-    response_model=TokenResponse,
-)
+@router.post("/signup")
 def signup(
     request: SignupRequest,
     auth_service: AuthService = Depends(get_auth_service),
 ):
+    print("ROUTE HIT")
+
     token = auth_service.signup(
         organization_name=request.organization_name,
         organization_slug=request.organization_slug,
@@ -31,8 +30,6 @@ def signup(
     )
 
     return TokenResponse(**token)
-
-
 @router.post(
     "/login",
     response_model=TokenResponse,
