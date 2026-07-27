@@ -28,6 +28,14 @@ class UserRepository(BaseRepository[User, uuid.UUID]):
     def __init__(self, session: Session) -> None:
         super().__init__(session)
 
+    def get_all(self) -> list[User]:
+        """Return all users ordered by username."""
+        return (
+            self._session.query(User)
+            .order_by(User.username)
+            .all()
+        )
+
     def get_by_id(self, user_id: uuid.UUID) -> Optional[User]:
         """Return the user with the given primary key, if any."""
         return self._session.get(User, user_id)
@@ -65,14 +73,20 @@ class UserRepository(BaseRepository[User, uuid.UUID]):
         limit: Optional[int] = None,
         offset: Optional[int] = None,
     ) -> list[User]:
-        """Return users whose primary organization matches the given id,
-        optionally filtered by status."""
-        stmt = select(User).where(User.primary_organization_id == organization_id)
+        """Return users whose primary organization matches the given id."""
+        stmt = select(User).where(
+            User.primary_organization_id == organization_id
+        )
+
         if status is not None:
             stmt = stmt.where(User.status == status)
+
         stmt = stmt.order_by(User.username)
+
         if offset is not None:
             stmt = stmt.offset(offset)
+
         if limit is not None:
             stmt = stmt.limit(limit)
+
         return list(self._session.scalars(stmt))

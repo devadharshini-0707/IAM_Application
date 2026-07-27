@@ -1,10 +1,13 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { signup } from "../services/auth";
 
 function Signup() {
+    const navigate = useNavigate();
+
     const [organizationName, setOrganizationName] = useState("");
     const [organizationSlug, setOrganizationSlug] = useState("");
-    const [organizationTier, setOrganizationTier] = useState("free");
+    const [organizationTier] = useState("free");
     const [displayName, setDisplayName] = useState("");
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
@@ -12,6 +15,7 @@ function Signup() {
 
     const handleSignup = async () => {
         console.log("Button clicked");
+
         try {
             const response = await signup({
                 organization_name: organizationName,
@@ -29,14 +33,21 @@ function Signup() {
             );
 
             alert("Signup Successful!");
+
             console.log(response);
-        }catch (error: any) {
-    console.error(error);
+
+            // Navigate to Dashboard
+            navigate("/dashboard");
+        } catch (error: any) {
+            console.error(error);
 
             if (error.response) {
                 console.log("Status:", error.response.status);
-                console.log(JSON.stringify(error.response.data, null, 2));
-                alert(JSON.stringify(error.response.data));
+                console.log(error.response.data);
+                alert(
+                    error.response.data.detail ??
+                    JSON.stringify(error.response.data)
+                );
             } else {
                 alert(error.message);
             }
@@ -46,54 +57,83 @@ function Signup() {
     return (
         <div
             style={{
-                width: "420px",
-                margin: "50px auto",
+                width: "430px",
+                margin: "60px auto",
+                padding: "30px",
+                borderRadius: "12px",
+                boxShadow: "0 0 15px rgba(0,0,0,0.15)",
                 display: "flex",
                 flexDirection: "column",
                 gap: "12px",
+                background: "white",
             }}
         >
-            <h1>IAM Signup</h1>
+            <h2 style={{ textAlign: "center" }}>
+                Create Organization
+            </h2>
 
             <input
                 placeholder="Organization Name"
                 value={organizationName}
-                onChange={(e) => setOrganizationName(e.target.value)}
+                onChange={(e) =>
+                    setOrganizationName(e.target.value)
+                }
             />
 
             <input
                 placeholder="Organization Slug"
                 value={organizationSlug}
-                onChange={(e) => setOrganizationSlug(e.target.value)}
+                onChange={(e) =>
+                    setOrganizationSlug(e.target.value)
+                }
             />
 
             <input
                 placeholder="Display Name"
                 value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
+                onChange={(e) =>
+                    setDisplayName(e.target.value)
+                }
             />
 
             <input
                 placeholder="Username"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={(e) =>
+                    setUsername(e.target.value)
+                }
             />
 
             <input
                 type="email"
                 placeholder="Email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) =>
+                    setEmail(e.target.value)
+                }
             />
 
             <input
                 type="password"
                 placeholder="Password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) =>
+                    setPassword(e.target.value)
+                }
             />
 
-            <button onClick={handleSignup}>
+            <button
+                onClick={handleSignup}
+                style={{
+                    padding: "12px",
+                    border: "none",
+                    borderRadius: "8px",
+                    background: "#2563eb",
+                    color: "white",
+                    fontWeight: "bold",
+                    cursor: "pointer",
+                }}
+            >
                 Create Organization
             </button>
         </div>
