@@ -29,12 +29,14 @@ class UserRepository(BaseRepository[User, uuid.UUID]):
         super().__init__(session)
 
     def get_all(self) -> list[User]:
-        """Return all users ordered by username."""
+        """Return all users except deleted users."""
+
         return (
-            self._session.query(User)
-            .order_by(User.username)
-            .all()
-        )
+        self._session.query(User)
+        .filter(User.status != "deleted")
+        .order_by(User.username)
+        .all()
+    )
 
     def get_by_id(self, user_id: uuid.UUID) -> Optional[User]:
         """Return the user with the given primary key, if any."""

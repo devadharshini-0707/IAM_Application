@@ -1,12 +1,3 @@
-"""Use-case layer for the ``User`` aggregate -- the login-capable
-specialization of ``Identity``.
-
-Enforces the business rules ``UserRepository`` deliberately leaves out
-(identity and organization existence, the one-to-one link between a
-``User`` and its ``Identity``, username/email uniqueness) and owns the
-transaction boundary around each use case.
-"""
-
 from __future__ import annotations
 
 import uuid
@@ -14,6 +5,7 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
+from app.models.identity import Identity
 from app.models.user import User
 from app.repositories.identity_repository import IdentityRepository
 from app.repositories.organization_repository import OrganizationRepository
@@ -23,7 +15,7 @@ from app.services.exceptions import ConflictError, NotFoundError
 
 
 class UserService(BaseService):
-    """Use cases for creating, looking up, and managing login-capable users."""
+    """Business logic for User management."""
 
     def __init__(
         self,
@@ -37,23 +29,20 @@ class UserService(BaseService):
         self._identities = identity_repository
         self._organizations = organization_repository
 
+    # ------------------------------------------------------------------
+    # Create
+    # ------------------------------------------------------------------
+
     def create_user(
         self,
         *,
-        identity_id: uuid.UUID,
         username: str,
         email: str,
         primary_organization_id: uuid.UUID,
     ) -> User:
+        """Create a new user and automatically create an Identity."""
 
         with self._transaction():
-            if self._identities.get_by_id(identity_id) is None:
-                raise NotFoundError(f"Identity {identity_id} does not exist.")
-
-            if self._users.get_by_identity_id(identity_id) is not None:
-                raise ConflictError(
-                    f"Identity {identity_id} already has an associated user."
-                )
 
             if self._organizations.get_by_id(primary_organization_id) is None:
                 raise NotFoundError(
@@ -61,13 +50,27 @@ class UserService(BaseService):
                 )
 
             if self._users.exists_by_username(username):
-                raise ConflictError(f"Username {username!r} is already taken.")
+                raise ConflictError(
+                    f"Username {username!r} is already taken."
+                )
 
             if self._users.exists_by_email(email):
-                raise ConflictError(f"Email {email!r} is already registered.")
+                raise ConflictError(
+                    f"Email {email!r} is already registered."
+                )
+
+            identity = Identity(
+                organization_id=primary_organization_id,
+                principal_type="human",
+                display_name=username,
+                status="active",
+            )
+
+            self._session.add(identity)
+            self._session.flush()
 
             user = User(
-                identity_id=identity_id,
+                identity_id=identity.identity_id,
                 username=username,
                 email=email,
                 primary_organization_id=primary_organization_id,
@@ -76,15 +79,18 @@ class UserService(BaseService):
 
             return self._users.add(user)
 
+    # ------------------------------------------------------------------
+    # Read
+    # ------------------------------------------------------------------
+
     def get_all_users(self) -> list[User]:
-        """Return all users."""
         return self._users.get_all()
 
     def get_user(self, user_id: uuid.UUID) -> User:
         user = self._users.get_by_id(user_id)
 
         if user is None:
-            raise NotFoundError(f"User {user_id} does not exist.")
+            raise NotFoundError("User not found.")
 
         return user
 
@@ -92,9 +98,7 @@ class UserService(BaseService):
         user = self._users.get_by_username(username)
 
         if user is None:
-            raise NotFoundError(
-                f"User with username {username!r} does not exist."
-            )
+            raise NotFoundError("User not found.")
 
         return user
 
@@ -102,9 +106,7 @@ class UserService(BaseService):
         user = self._users.get_by_email(email)
 
         if user is None:
-            raise NotFoundError(
-                f"User with email {email!r} does not exist."
-            )
+            raise NotFoundError("User not found.")
 
         return user
 
@@ -112,9 +114,7 @@ class UserService(BaseService):
         user = self._users.get_by_identity_id(identity_id)
 
         if user is None:
-            raise NotFoundError(
-                f"Identity {identity_id} has no associated user."
-            )
+            raise NotFoundError("User not found.")
 
         return user
 
@@ -127,11 +127,6 @@ class UserService(BaseService):
         offset: Optional[int] = None,
     ) -> list[User]:
 
-        if self._organizations.get_by_id(organization_id) is None:
-            raise NotFoundError(
-                f"Organization {organization_id} does not exist."
-            )
-
         return self._users.list_by_organization(
             organization_id,
             status=status,
@@ -139,68 +134,125 @@ class UserService(BaseService):
             offset=offset,
         )
 
-    def update_email(self, user_id: uuid.UUID, new_email: str) -> User:
+    # ------------------------------------------------------------------
+    # Update
+    # ------------------------------------------------------------------
+
+    def update_user(
+        self,
+        *,
+        user_id: uuid.UUID,
+        username: str | None = None,
+        email: str | None = None,
+    ) -> User:
+        """Update username and/or email."""
+
         with self._transaction():
+
+            user = self.get_user(user_id)
+
+            if username is not None and username != user.username:
+
+                if self._users.exists_by_username(username):
+                    raise ConflictError("Username already exists.")
+
+                user.username = username
+
+                if user.identity is not None:
+                    user.identity.display_name = username
+
+            if email is not None and email != user.email:
+
+                if self._users.exists_by_email(email):
+                    raise ConflictError("Email already exists.")
+
+                user.email = email
+
+            return self._users.update(user)
+
+    def update_email(
+        self,
+        user_id: uuid.UUID,
+        new_email: str,
+    ) -> User:
+
+        with self._transaction():
+
             user = self.get_user(user_id)
 
             if (
                 new_email != user.email
                 and self._users.exists_by_email(new_email)
             ):
-                raise ConflictError(
-                    f"Email {new_email!r} is already registered."
-                )
+                raise ConflictError("Email already exists.")
 
             user.email = new_email
+
             return self._users.update(user)
 
-    def update_username(self, user_id: uuid.UUID, new_username: str) -> User:
+    def update_username(
+        self,
+        user_id: uuid.UUID,
+        new_username: str,
+    ) -> User:
+
         with self._transaction():
+
             user = self.get_user(user_id)
 
             if (
                 new_username != user.username
                 and self._users.exists_by_username(new_username)
             ):
-                raise ConflictError(
-                    f"Username {new_username!r} is already taken."
-                )
+                raise ConflictError("Username already exists.")
 
             user.username = new_username
+
             return self._users.update(user)
 
-    def update_status(self, user_id: uuid.UUID, status: str) -> User:
-        with self._transaction():
-            user = self.get_user(user_id)
-            user.status = status
-            return self._users.update(user)
-
-    def transfer_primary_organization(
+    def enable_user(
         self,
         user_id: uuid.UUID,
-        new_organization_id: uuid.UUID,
     ) -> User:
 
         with self._transaction():
+
             user = self.get_user(user_id)
 
-            if self._organizations.get_by_id(new_organization_id) is None:
-                raise NotFoundError(
-                    f"Organization {new_organization_id} does not exist."
-                )
-
-            user.primary_organization_id = new_organization_id
+            user.status = "active"
 
             return self._users.update(user)
 
-    def delete_user(self, user_id: uuid.UUID) -> None:
+    def disable_user(
+        self,
+        user_id: uuid.UUID,
+    ) -> User:
+
         with self._transaction():
+
             user = self.get_user(user_id)
 
-            self._delete_with_integrity_guard(
-                self._users,
-                user,
-                conflict_message=(
-                    f"Cannot delete user {user_id}: it is still referenced by other records."
-                ),
-            )
+            user.status = "disabled"
+
+            return self._users.update(user)
+
+    # ------------------------------------------------------------------
+    # Delete
+    # ------------------------------------------------------------------
+
+    def delete_user(
+        self,
+        user_id: uuid.UUID,
+    ) -> User:
+
+        with self._transaction():
+
+            user = self.get_user(user_id)
+
+            # Soft delete
+            user.status = "deleted"
+
+            if user.identity is not None:
+                user.identity.status = "deleted"
+
+            return self._users.update(user)

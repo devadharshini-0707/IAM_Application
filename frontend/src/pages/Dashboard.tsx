@@ -11,43 +11,28 @@ function Dashboard() {
     useEffect(() => {
         const loadUser = async () => {
             try {
-                console.log("=================================");
-                console.log(
-                    "TOKEN FROM LOCALSTORAGE:",
-                    localStorage.getItem("access_token")
-                );
-                console.log("=================================");
-
                 const data = await getCurrentUser();
-
-                console.log("USER DATA:", data);
-
                 setUser(data);
-            } catch (err: any) {
-                console.error("GET CURRENT USER FAILED");
+            } catch (err) {
                 console.error(err);
-
-                if (err.response) {
-                    console.log("STATUS:", err.response.status);
-                    console.log("DATA:", err.response.data);
-                }
-
-                // DON'T remove the token yet.
-                // We want to find the real error first.
-
-                // localStorage.removeItem("access_token");
-                // navigate("/login");
+                localStorage.removeItem("access_token");
+                navigate("/login");
             } finally {
                 setLoading(false);
             }
         };
 
         loadUser();
-    }, []);
+    }, [navigate]);
 
     if (loading) {
         return (
-            <div style={{ padding: "40px" }}>
+            <div
+                style={{
+                    padding: "40px",
+                    fontFamily: "Arial",
+                }}
+            >
                 <h2>Loading...</h2>
             </div>
         );
@@ -70,13 +55,11 @@ function Dashboard() {
                 <div>
                     <h1>IAM Dashboard</h1>
 
-                    {user ? (
+                    {user && (
                         <>
                             <h3>Welcome, {user.username}</h3>
                             <p>{user.email}</p>
                         </>
-                    ) : (
-                        <h3>No user loaded</h3>
                     )}
                 </div>
 
@@ -84,6 +67,14 @@ function Dashboard() {
                     onClick={() => {
                         localStorage.removeItem("access_token");
                         navigate("/login");
+                    }}
+                    style={{
+                        padding: "10px 18px",
+                        background: "#ef4444",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "8px",
+                        cursor: "pointer",
                     }}
                 >
                     Logout
@@ -100,20 +91,25 @@ function Dashboard() {
                     marginTop: "30px",
                 }}
             >
+                {/* USERS */}
                 <div
+                    onClick={() => navigate("/users")}
                     style={{
-                        border: "1px solid gray",
+                        border: "1px solid #d1d5db",
                         padding: "20px",
                         borderRadius: "10px",
+                        cursor: "pointer",
+                        transition: "0.2s",
                     }}
                 >
                     <h3>Users</h3>
                     <p>Manage organization users</p>
                 </div>
 
+                {/* ROLES */}
                 <div
                     style={{
-                        border: "1px solid gray",
+                        border: "1px solid #d1d5db",
                         padding: "20px",
                         borderRadius: "10px",
                     }}
@@ -122,9 +118,10 @@ function Dashboard() {
                     <p>Create and assign roles</p>
                 </div>
 
+                {/* GROUPS */}
                 <div
                     style={{
-                        border: "1px solid gray",
+                        border: "1px solid #d1d5db",
                         padding: "20px",
                         borderRadius: "10px",
                     }}

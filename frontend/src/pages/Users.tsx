@@ -1,41 +1,99 @@
 import { useEffect, useState } from "react";
-import { getUsers } from "../services/user";
+import { useNavigate } from "react-router-dom";
+import {
+    getUsers,
+    deleteUser,
+    disableUser,
+    enableUser,
+} from "../services/user";
 
 function Users() {
+    const navigate = useNavigate();
+
     const [users, setUsers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        loadUsers();
-    }, []);
 
     const loadUsers = async () => {
         try {
             const data = await getUsers();
             setUsers(data);
-        } catch (err) {
-            console.error(err);
+        } catch (error) {
+            console.error(error);
         } finally {
             setLoading(false);
         }
     };
 
+    useEffect(() => {
+        loadUsers();
+    }, []);
+
+    const handleDelete = async (id: string) => {
+        if (!window.confirm("Are you sure you want to delete this user?")) {
+            return;
+        }
+
+        try {
+            await deleteUser(id);
+            loadUsers();
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const handleDisable = async (id: string) => {
+        try {
+            await disableUser(id);
+            loadUsers();
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const handleEnable = async (id: string) => {
+        try {
+            await enableUser(id);
+            loadUsers();
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
     if (loading) {
-        return <h2 style={{ padding: 30 }}>Loading users...</h2>;
+        return (
+            <div
+                style={{
+                    padding: 40,
+                    fontFamily: "Arial",
+                }}
+            >
+                <h2>Loading Users...</h2>
+            </div>
+        );
     }
 
     return (
-        <div style={{ padding: 30 }}>
+        <div
+            style={{
+                padding: 40,
+                fontFamily: "Arial",
+            }}
+        >
             <div
                 style={{
                     display: "flex",
                     justifyContent: "space-between",
-                    marginBottom: 20,
+                    alignItems: "center",
+                    marginBottom: 30,
                 }}
             >
-                <h1>Users</h1>
+                <div>
+                    <h1>User Management</h1>
+                    <p>Manage all users in your organization.</p>
+                </div>
 
                 <button
+                    onClick={() => navigate("/users/create")}
                     style={{
                         padding: "10px 18px",
                         background: "#2563eb",
@@ -45,7 +103,7 @@ function Users() {
                         cursor: "pointer",
                     }}
                 >
-                    + Invite User
+                    + Create User
                 </button>
             </div>
 
@@ -61,9 +119,19 @@ function Users() {
                             background: "#f3f4f6",
                         }}
                     >
-                        <th style={{ padding: 12 }}>Username</th>
+                        <th
+                            style={{
+                                padding: 12,
+                                textAlign: "left",
+                            }}
+                        >
+                            Username
+                        </th>
+
                         <th>Email</th>
+
                         <th>Status</th>
+
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -76,18 +144,82 @@ function Users() {
                                 borderBottom: "1px solid #ddd",
                             }}
                         >
-                            <td style={{ padding: 12 }}>
+                            <td
+                                style={{
+                                    padding: 12,
+                                }}
+                            >
                                 {user.username}
                             </td>
 
                             <td>{user.email}</td>
 
-                            <td>{user.status}</td>
+                            <td>
+                                <span
+                                    style={{
+                                        fontWeight: "bold",
+                                        color:
+                                            user.status === "active"
+                                                ? "green"
+                                                : user.status === "disabled"
+                                                ? "orange"
+                                                : "red",
+                                    }}
+                                >
+                                    {user.status}
+                                </span>
+                            </td>
 
                             <td>
-                                <button>Edit</button>{" "}
-                                <button>Disable</button>{" "}
-                                <button>Delete</button>
+                                <button
+                                    onClick={() =>
+                                        navigate(
+                                            `/users/edit/${user.user_id}`
+                                        )
+                                    }
+                                    disabled={user.status === "deleted"}
+                                    style={{
+                                        marginRight: 8,
+                                    }}
+                                >
+                                    Edit
+                                </button>
+
+                                {user.status === "active" && (
+                                    <button
+                                        onClick={() =>
+                                            handleDisable(user.user_id)
+                                        }
+                                        style={{
+                                            marginRight: 8,
+                                        }}
+                                    >
+                                        Disable
+                                    </button>
+                                )}
+
+                                {user.status === "disabled" && (
+                                    <button
+                                        onClick={() =>
+                                            handleEnable(user.user_id)
+                                        }
+                                        style={{
+                                            marginRight: 8,
+                                        }}
+                                    >
+                                        Enable
+                                    </button>
+                                )}
+
+                                {user.status !== "deleted" && (
+                                    <button
+                                        onClick={() =>
+                                            handleDelete(user.user_id)
+                                        }
+                                    >
+                                        Delete
+                                    </button>
+                                )}
                             </td>
                         </tr>
                     ))}

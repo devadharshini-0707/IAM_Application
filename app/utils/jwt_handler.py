@@ -1,57 +1,31 @@
-"""JWT token creation and validation utilities."""
+from datetime import datetime, timedelta, UTC
 
-from __future__ import annotations
-
-from datetime import datetime, timedelta, timezone
-from typing import Any
-
-from jose import JWTError, jwt
+import jwt
 
 from app.config.settings import get_settings
 
+settings = get_settings()
+
 
 class JWTHandler:
-    """Handles JWT access token generation and decoding."""
-
-    def __init__(self) -> None:
-        self._settings = get_settings()
-
-    def create_access_token(
-        self,
-        *,
-        subject: str,
-        organization_id: str,
-    ) -> str:
-        """Create JWT access token."""
-
-        expire = datetime.now(timezone.utc) + timedelta(
-            minutes=self._settings.access_token_expire_minutes
-        )
-
-        payload: dict[str, Any] = {
-            "sub": subject,
-            "organization_id": organization_id,
-            "exp": expire,
+    @staticmethod
+    def create_access_token(user_id: str) -> str:
+        payload = {
+            "sub": user_id,
+            "exp": datetime.now(UTC)
+            + timedelta(minutes=settings.access_token_expire_minutes),
         }
 
         return jwt.encode(
             payload,
-            self._settings.secret_key,
-            algorithm=self._settings.jwt_algorithm,
+            settings.secret_key,
+            algorithm=settings.jwt_algorithm,
         )
 
-    def decode_token(
-        self,
-        token: str,
-    ) -> dict[str, Any]:
-        """Decode JWT token."""
-
-        try:
-            return jwt.decode(
-                token,
-                self._settings.secret_key,
-                algorithms=[self._settings.jwt_algorithm],
-            )
-
-        except JWTError as exc:
-            raise ValueError("Invalid token") from exc
+    @staticmethod
+    def decode_token(token: str):
+        return jwt.decode(
+            token,
+            settings.secret_key,
+            algorithms=[settings.jwt_algorithm],
+        )
