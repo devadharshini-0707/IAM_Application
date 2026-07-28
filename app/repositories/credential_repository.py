@@ -32,6 +32,19 @@ class CredentialRepository(BaseRepository[Credential, uuid.UUID]):
 
         return self._session.scalars(stmt).first()
 
+    def get_by_user(
+        self,
+        user_id: uuid.UUID,
+    ) -> list[Credential]:
+        """Return every credential belonging to a user."""
+
+        stmt = (
+            select(Credential)
+            .where(Credential.user_id == user_id)
+        )
+
+        return list(self._session.scalars(stmt))
+
     def create(
         self,
         credential: Credential,

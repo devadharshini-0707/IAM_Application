@@ -1,13 +1,17 @@
-import api from "./api";
+import axios from "axios";
 
-export const getUsers = async () => {
+const api = axios.create({
+    baseURL: "http://127.0.0.1:8000",
+});
+
+api.interceptors.request.use((config) => {
     const token = localStorage.getItem("access_token");
 
-    const response = await api.get("/users", {
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-    });
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
 
-    return response.data;
-};
+    return config;
+});
+
+export default api;

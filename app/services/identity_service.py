@@ -117,7 +117,7 @@ class IdentityService(BaseService):
             identity.display_name = display_name
             return self._identities.update(identity)
 
-    def update_identity_status(self, identity_id: uuid.UUID, status: str) -> Identity:
+    def update_tatus(self, identity_id: uuid.UUID, status: str) -> Identity:
         """Transition an identity to a new status.
 
         Raises:

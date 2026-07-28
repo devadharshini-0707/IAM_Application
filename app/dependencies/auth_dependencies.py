@@ -20,30 +20,35 @@ def get_auth_service(
     session: Session = Depends(get_db),
 ) -> AuthService:
 
+    organization_repository = OrganizationRepository(session)
+    identity_repository = IdentityRepository(session)
+    user_repository = UserRepository(session)
+    credential_repository = CredentialRepository(session)
+
     organization_service = OrganizationService(
         session=session,
-        organization_repository=OrganizationRepository(session),
+        organization_repository=organization_repository,
     )
 
     identity_service = IdentityService(
         session=session,
-        identity_repository=IdentityRepository(session),
-        organization_repository=OrganizationRepository(session),
+        identity_repository=identity_repository,
+        organization_repository=organization_repository,
     )
 
     user_service = UserService(
         session=session,
-        user_repository=UserRepository(session),
-        identity_repository=IdentityRepository(session),
-        organization_repository=OrganizationRepository(session),
+        user_repository=user_repository,
+        identity_repository=identity_repository,
+        organization_repository=organization_repository,
+        credential_repository=credential_repository,
     )
 
     return AuthService(
         session=session,
-        user_repository=UserRepository(session),
-        credential_repository=CredentialRepository(session),
+        user_repository=user_repository,
+        credential_repository=credential_repository,
         organization_service=organization_service,
-        identity_service=identity_service,
         user_service=user_service,
         jwt_handler=JWTHandler(),
     )

@@ -13,30 +13,23 @@ function Dashboard() {
             try {
                 console.log("=================================");
                 console.log(
-                    "TOKEN FROM LOCALSTORAGE:",
+                    "TOKEN:",
                     localStorage.getItem("access_token")
                 );
                 console.log("=================================");
 
                 const data = await getCurrentUser();
 
-                console.log("USER DATA:", data);
+                console.log("USER:", data);
 
                 setUser(data);
             } catch (err: any) {
-                console.error("GET CURRENT USER FAILED");
                 console.error(err);
 
                 if (err.response) {
-                    console.log("STATUS:", err.response.status);
-                    console.log("DATA:", err.response.data);
+                    console.log(err.response.status);
+                    console.log(err.response.data);
                 }
-
-                // DON'T remove the token yet.
-                // We want to find the real error first.
-
-                // localStorage.removeItem("access_token");
-                // navigate("/login");
             } finally {
                 setLoading(false);
             }
@@ -47,7 +40,7 @@ function Dashboard() {
 
     if (loading) {
         return (
-            <div style={{ padding: "40px" }}>
+            <div style={{ padding: 40 }}>
                 <h2>Loading...</h2>
             </div>
         );
@@ -56,7 +49,7 @@ function Dashboard() {
     return (
         <div
             style={{
-                padding: "40px",
+                padding: 40,
                 fontFamily: "Arial",
             }}
         >
@@ -85,6 +78,14 @@ function Dashboard() {
                         localStorage.removeItem("access_token");
                         navigate("/login");
                     }}
+                    style={{
+                        padding: "10px 18px",
+                        background: "#ef4444",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "8px",
+                        cursor: "pointer",
+                    }}
                 >
                     Logout
                 </button>
@@ -100,17 +101,22 @@ function Dashboard() {
                     marginTop: "30px",
                 }}
             >
+                {/* USERS */}
                 <div
+                    onClick={() => navigate("/users")}
                     style={{
                         border: "1px solid gray",
                         padding: "20px",
                         borderRadius: "10px",
+                        cursor: "pointer",
+                        transition: "0.2s",
                     }}
                 >
                     <h3>Users</h3>
                     <p>Manage organization users</p>
                 </div>
 
+                {/* ROLES */}
                 <div
                     style={{
                         border: "1px solid gray",
@@ -122,6 +128,7 @@ function Dashboard() {
                     <p>Create and assign roles</p>
                 </div>
 
+                {/* GROUPS */}
                 <div
                     style={{
                         border: "1px solid gray",
