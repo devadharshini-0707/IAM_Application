@@ -1,10 +1,4 @@
-"""Data-access layer for the ``User`` aggregate.
-
-Wraps a SQLAlchemy ``Session`` with typed methods scoped to the ``users``
-table -- the login-capable specialization of ``Identity``. Contains no
-business rules (credential handling, status-transition rules, uniqueness
-enforcement, etc.); that judgment belongs to the service layer above it.
-"""
+"""Data-access layer for the User aggregate."""
 
 from __future__ import annotations
 
@@ -19,7 +13,7 @@ from app.repositories.base_repository import BaseRepository
 
 
 class UserRepository(BaseRepository[User, uuid.UUID]):
-    """Typed CRUD and lookup methods for the ``User`` model."""
+    """Repository for User."""
 
     model = User
 
@@ -27,10 +21,6 @@ class UserRepository(BaseRepository[User, uuid.UUID]):
         super().__init__(session)
 
     def get_all(self) -> list[User]:
-        """
-        Return all active/non-deleted users ordered by username.
-        """
-
         return (
             self._session.query(User)
             .filter(User.status != "deleted")
@@ -38,8 +28,52 @@ class UserRepository(BaseRepository[User, uuid.UUID]):
             .all()
         )
 
-    def get_by_id(self, user_id: uuid.UUID) -> Optional[User]:
-        return self._session.get(User, user_id)
+    def get_paginated(
+        self,
+        *,
+        limit: int,
+        offset: int,
+        search: str | None = None,
+    ) -> tuple[list[User], int]:
+        """
+        Returns (users, total_count)
+        """
+
+        query = (
+            self._session.query(User)
+            .filter(User.status != "deleted")
+        )
+
+        if search:
+            query = query.filter(
+                or_(
+                    User.username.ilike(f"%{search}%"),
+                    User.email.ilike(f"%{search}%"),
+                )
+            )
+
+        total = query.count()
+
+        users = (
+            query.order_by(User.username)
+            .offset(offset)
+            .limit(limit)
+            .all()
+        )
+
+        return users, total
+
+    def get_by_id(
+        self,
+        user_id: uuid.UUID,
+    ) -> Optional[User]:
+        stmt = (
+            select(User)
+            .where(User.user_id == user_id)
+            .where(User.status != "deleted")
+        )
+
+        return self._session.scalars(stmt).first()
 
     def get_by_identity_id(
         self,
@@ -48,42 +82,55 @@ class UserRepository(BaseRepository[User, uuid.UUID]):
         stmt = select(User).where(
             User.identity_id == identity_id
         )
+
         return self._session.scalars(stmt).first()
 
     def get_by_username(
         self,
         username: str,
     ) -> Optional[User]:
-        stmt = select(User).where(
-            User.username == username
+        stmt = (
+            select(User)
+            .where(User.username == username)
+            .where(User.status != "deleted")
         )
+
         return self._session.scalars(stmt).first()
 
     def get_by_email(
         self,
         email: str,
     ) -> Optional[User]:
-        stmt = select(User).where(
-            User.email == email
+        stmt = (
+            select(User)
+            .where(User.email == email)
+            .where(User.status != "deleted")
         )
+
         return self._session.scalars(stmt).first()
 
     def exists_by_username(
         self,
         username: str,
     ) -> bool:
-        stmt = select(User.user_id).where(
-            User.username == username
+        stmt = (
+            select(User.user_id)
+            .where(User.username == username)
+            .where(User.status != "deleted")
         )
+
         return self._session.scalars(stmt).first() is not None
 
     def exists_by_email(
         self,
         email: str,
     ) -> bool:
-        stmt = select(User.user_id).where(
-            User.email == email
+        stmt = (
+            select(User.user_id)
+            .where(User.email == email)
+            .where(User.status != "deleted")
         )
+
         return self._session.scalars(stmt).first() is not None
 
     def update(
@@ -92,6 +139,7 @@ class UserRepository(BaseRepository[User, uuid.UUID]):
     ) -> User:
         self._session.add(user)
         self._session.flush()
+        self._session.refresh(user)
         return user
 
     def enable(
@@ -99,41 +147,26 @@ class UserRepository(BaseRepository[User, uuid.UUID]):
         user: User,
     ) -> User:
         user.status = "active"
-        self._session.add(user)
-        self._session.flush()
-        return user
+        return self.update(user)
 
     def disable(
         self,
         user: User,
     ) -> User:
         user.status = "disabled"
-        self._session.add(user)
-        self._session.flush()
-        return user
+        return self.update(user)
 
     def soft_delete(
         self,
         user: User,
     ) -> User:
-        """
-        Soft delete instead of removing the row.
-        """
-
         user.status = "deleted"
-
-        self._session.add(user)
-        self._session.flush()
-
-        return user
+        return self.update(user)
 
     def search(
         self,
         keyword: str,
     ) -> list[User]:
-        """
-        Search users by username or email.
-        """
 
         stmt = (
             select(User)
@@ -155,9 +188,9 @@ class UserRepository(BaseRepository[User, uuid.UUID]):
         self,
         organization_id: uuid.UUID,
         *,
-        status: Optional[str] = None,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
+        status: str | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
     ) -> list[User]:
 
         stmt = (
@@ -168,10 +201,8 @@ class UserRepository(BaseRepository[User, uuid.UUID]):
             .where(User.status != "deleted")
         )
 
-        if status is not None:
-            stmt = stmt.where(
-                User.status == status
-            )
+        if status:
+            stmt = stmt.where(User.status == status)
 
         stmt = stmt.order_by(User.username)
 

@@ -40,7 +40,7 @@ def get_current_logged_in_user(
 def get_users(
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
-    search: str | None = None,
+    search: str | None = Query(None),
     user_service: UserService = Depends(get_user_service),
 ):
     users, total = user_service.get_users_paginated(
@@ -66,6 +66,8 @@ def search_users(
     user_service: UserService = Depends(get_user_service),
 ):
     return user_service.search_users(keyword)
+
+
 @router.get("/{user_id}", response_model=UserResponse)
 def get_user(
     user_id: UUID,
@@ -127,5 +129,5 @@ def delete_user(
     user_service.delete_user(user_id)
 
     return {
-        "message": "User deleted successfully.",
+        "message": "User deleted successfully."
     }

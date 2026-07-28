@@ -15,7 +15,7 @@ from app.services.exceptions import ConflictError, NotFoundError
 
 
 class UserService(BaseService):
-    """Use cases for creating, looking up, updating and soft deleting users."""
+    """Business logic for User management."""
 
     def __init__(
         self,
@@ -49,12 +49,12 @@ class UserService(BaseService):
 
             if self._users.exists_by_username(username):
                 raise ConflictError(
-                    f"Username {username!r} is already taken."
+                    f"Username '{username}' is already taken."
                 )
 
             if self._users.exists_by_email(email):
                 raise ConflictError(
-                    f"Email {email!r} is already registered."
+                    f"Email '{email}' is already registered."
                 )
 
             identity = Identity(
@@ -79,29 +79,33 @@ class UserService(BaseService):
     def get_all_users(self) -> list[User]:
         return self._users.get_all()
 
+    def get_users_paginated(
+        self,
+        *,
+        page: int,
+        page_size: int,
+        search: str | None = None,
+    ) -> tuple[list[User], int]:
+
+        offset = (page - 1) * page_size
+
+        return self._users.get_paginated(
+            limit=page_size,
+            offset=offset,
+            search=search,
+        )
+
     def search_users(
         self,
         keyword: str,
     ) -> list[User]:
         return self._users.search(keyword)
 
-    def get_users_paginated(
-        self,
-        *,
-        page: int,
-        page_size: int,
-    ) -> list[User]:
-        offset = (page - 1) * page_size
-
-        return self._users.get_paginated(
-            limit=page_size,
-            offset=offset,
-        )
-
     def get_user(
         self,
         user_id: uuid.UUID,
     ) -> User:
+
         user = self._users.get_by_id(user_id)
 
         if user is None:
@@ -115,11 +119,12 @@ class UserService(BaseService):
         self,
         username: str,
     ) -> User:
+
         user = self._users.get_by_username(username)
 
         if user is None:
             raise NotFoundError(
-                f"User with username {username!r} does not exist."
+                f"User '{username}' does not exist."
             )
 
         return user
@@ -128,35 +133,15 @@ class UserService(BaseService):
         self,
         email: str,
     ) -> User:
+
         user = self._users.get_by_email(email)
 
         if user is None:
             raise NotFoundError(
-                f"User with email {email!r} does not exist."
+                f"User '{email}' does not exist."
             )
 
         return user
-    def update_email(
-        self,
-        user_id: uuid.UUID,
-        new_email: str,
-    ) -> User:
-
-        with self._transaction():
-
-            user = self.get_user(user_id)
-
-            if (
-                new_email != user.email
-                and self._users.exists_by_email(new_email)
-            ):
-                raise ConflictError(
-                    f"Email {new_email!r} is already registered."
-                )
-
-            user.email = new_email
-
-            return self._users.update(user)
 
     def update_username(
         self,
@@ -173,7 +158,7 @@ class UserService(BaseService):
                 and self._users.exists_by_username(new_username)
             ):
                 raise ConflictError(
-                    f"Username {new_username!r} is already taken."
+                    f"Username '{new_username}' already exists."
                 )
 
             user.username = new_username
@@ -182,9 +167,31 @@ class UserService(BaseService):
                 user.identity_id
             )
 
-            if identity is not None:
+            if identity:
                 identity.display_name = new_username
                 self._identities.update(identity)
+
+            return self._users.update(user)
+
+    def update_email(
+        self,
+        user_id: uuid.UUID,
+        new_email: str,
+    ) -> User:
+
+        with self._transaction():
+
+            user = self.get_user(user_id)
+
+            if (
+                new_email != user.email
+                and self._users.exists_by_email(new_email)
+            ):
+                raise ConflictError(
+                    f"Email '{new_email}' already exists."
+                )
+
+            user.email = new_email
 
             return self._users.update(user)
 
@@ -204,7 +211,7 @@ class UserService(BaseService):
                 user.identity_id
             )
 
-            if identity is not None:
+            if identity:
                 identity.status = status
                 self._identities.update(identity)
 
@@ -219,14 +226,13 @@ class UserService(BaseService):
 
             user = self.get_user(user_id)
 
-            user.status = "deleted"
-            self._users.update(user)
+            self._users.soft_delete(user)
 
             identity = self._identities.get_by_id(
                 user.identity_id
             )
 
-            if identity is not None:
+            if identity:
                 identity.status = "deleted"
                 self._identities.update(identity)
 
