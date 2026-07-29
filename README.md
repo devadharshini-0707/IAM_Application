@@ -1,190 +1,360 @@
-# IAM Application
+# Enterprise IAM Application
 
-An enterprise-grade Identity and Access Management (IAM) application built using **FastAPI**, **SQLAlchemy**, **PostgreSQL**, and **Alembic**. This project follows a clean, layered architecture to provide a scalable foundation for user identity, authentication, authorization, and organization management in multi-tenant applications.
+A production-style **Identity and Access Management (IAM)** application built using **FastAPI**, **React**, **TypeScript**, and **PostgreSQL** following **Clean Architecture**, **Repository Pattern**, and enterprise software engineering practices.
 
----
-
-## 🚀 Tech Stack
-
-- **Language:** Python 3.12+
-- **Framework:** FastAPI
-- **Database:** PostgreSQL
-- **ORM:** SQLAlchemy 2.x
-- **Database Migration:** Alembic
-- **Package Manager:** uv
+This project is being developed as an enterprise-grade IAM platform similar to **Okta**, **Keycloak**, **Azure AD**, and **AWS IAM**.
 
 ---
 
-## 📂 Project Structure
+# Features
+
+## Authentication
+
+- User Signup
+- User Login
+- JWT Authentication
+- Password Hashing (bcrypt)
+- Protected API Endpoints
+- Secure Credential Storage
+
+---
+
+## User Management
+
+- Create User
+- View Users
+- Search Users
+- Edit User
+- Enable User
+- Disable User
+- Soft Delete User
+- Pagination
+- Current Logged-in User API
+
+---
+
+## Database
+
+Implemented using PostgreSQL.
+
+Current entities include:
+
+- Organization
+- Identity
+- User
+- Credential
+
+Relationships are maintained using foreign keys following enterprise IAM design principles.
+
+---
+
+# Technology Stack
+
+## Backend
+
+- FastAPI
+- Python 3
+- SQLAlchemy ORM
+- Alembic
+- PostgreSQL
+- JWT Authentication
+- bcrypt Password Hashing
+
+---
+
+## Frontend
+
+- React
+- TypeScript
+- Axios
+- React Router
+
+---
+
+## Database
+
+- PostgreSQL
+- pgAdmin 4
+
+---
+
+# Project Architecture
+
+```
+Client (React)
+
+        │
+
+        ▼
+
+FastAPI Routes
+
+        │
+
+        ▼
+
+Service Layer
+
+        │
+
+        ▼
+
+Repository Layer
+
+        │
+
+        ▼
+
+SQLAlchemy ORM
+
+        │
+
+        ▼
+
+PostgreSQL
+```
+
+The project follows:
+
+- Clean Architecture
+- Repository Pattern
+- Dependency Injection
+- Separation of Concerns
+- Layered Architecture
+
+---
+
+# Project Structure
 
 ```
 app/
-├── config/          # Database and application configuration
-├── models/          # SQLAlchemy ORM models
-├── repositories/    # Data access layer
-├── services/        # Business logic layer
-├── schemas/         # Pydantic request/response models (In Progress)
-├── routes/          # FastAPI API endpoints (In Progress)
-├── utils/           # Utility functions
-├── main.py          # Application entry point
-└── __init__.py
+│
+├── config/
+├── dependencies/
+├── models/
+├── repositories/
+├── routes/
+├── schemas/
+├── services/
+├── utils/
+└── main.py
+
+frontend/
+│
+├── src/
+│   ├── pages/
+│   ├── services/
+│   ├── components/
+│   └── App.tsx
 ```
 
 ---
 
-## ✅ Features Implemented
+# Current Progress
 
-### Database Layer
-- PostgreSQL configuration
-- SQLAlchemy integration
-- Database session management
-- Declarative base model setup
+| Module | Status |
+|---------|--------|
+| Project Setup | ✅ Completed |
+| PostgreSQL Integration | ✅ Completed |
+| Authentication | ✅ Completed |
+| JWT Authentication | ✅ Completed |
+| Password Hashing | ✅ Completed |
+| User Management | ✅ Completed |
+| Search | ✅ Completed |
+| Edit User | ✅ Completed |
+| Enable / Disable User | ✅ Completed |
+| Soft Delete | ✅ Completed |
+| Pagination | ✅ Completed |
+| Frontend Integration | ✅ Completed |
 
-### Database Models
-- User
-- Identity
+---
+
+# Upcoming Modules
+
 - User Details
-- Organization
-- User Organization
-- Credential
-- Password History
-- Authentication Policy
-- MFA Factor
-- MFA Challenge
-- Role
-- User Role
-- Role Swap
-- Group
-- User Group
-- User Audit Log
-
-### Database Migration
-- Alembic configuration
-- Initial migration generation
-- Schema successfully migrated to PostgreSQL
-
-### Repository Layer
-- Generic Base Repository
-- User Repository
-- Identity Repository
-- Organization Repository
-- User Details Repository
-
-### Service Layer
-- Base Service
-- User Service
-- Identity Service
-- Organization Service
-- User Details Service
-- Centralized service exceptions
+- Organization Management
+- Role Management
+- Permission Management
+- Group Management
+- User Role Assignment
+- User Group Assignment
+- Role Based Access Control (RBAC)
+- Audit Logs
+- Multi-Factor Authentication (MFA)
+- Password Policies
+- Session Management
 
 ---
 
-## 🚧 Work In Progress
+# Installation
 
-- Pydantic Schemas
-- FastAPI API Endpoints
-- JWT Authentication
-- Password Hashing
-- Authorization (RBAC)
-- Dependency Injection
-- Request Validation
-- API Documentation
-- Unit & Integration Testing
-
----
-
-## 🛠️ Getting Started
-
-### Clone the Repository
+## Clone Repository
 
 ```bash
 git clone https://github.com/devadharshini-0707/IAM_Application.git
+
 cd IAM_Application
 ```
 
-### Create Virtual Environment
+---
+
+## Create Virtual Environment
 
 ```bash
-uv venv
+python -m venv .venv
 ```
 
-### Install Dependencies
+Activate:
+
+### Windows
 
 ```bash
-uv sync
+.venv\Scripts\activate
 ```
 
-### Configure Environment Variables
+---
 
-Create a `.env` file and configure your PostgreSQL database connection.
+## Install Dependencies
 
-Example:
-
-```env
-DATABASE_URL=postgresql://username:password@localhost:5432/iam_db
+```bash
+pip install -r requirements.txt
 ```
 
-### Apply Database Migrations
+---
+
+## Configure Environment
+
+Create a `.env` file and configure:
+
+```
+DATABASE_URL=postgresql://...
+SECRET_KEY=your_secret_key
+JWT_ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=60
+```
+
+---
+
+## Run Database Migrations
 
 ```bash
 alembic upgrade head
 ```
 
-### Run the Application
+---
+
+## Start Backend
 
 ```bash
-uv run uvicorn app.main:app --reload
+uvicorn app.main:app --reload
+```
+
+Backend:
+
+```
+http://127.0.0.1:8000
+```
+
+Swagger:
+
+```
+http://127.0.0.1:8000/docs
 ```
 
 ---
 
-## 📌 Architecture
+## Start Frontend
 
-The project follows a layered architecture:
+```bash
+npm install
 
-```
-API Layer (Routes)
-        │
-        ▼
-Service Layer
-        │
-        ▼
-Repository Layer
-        │
-        ▼
-Database (SQLAlchemy + PostgreSQL)
+npm run dev
 ```
 
-This separation keeps business logic, data access, and API handling independent and maintainable.
+---
+
+# API Overview
+
+## Authentication
+
+```
+POST /auth/signup
+
+POST /auth/login
+```
 
 ---
 
-## 📅 Development Status
+## Users
 
-| Module | Status |
-|---------|--------|
-| Database Configuration | ✅ Completed |
-| SQLAlchemy Models | ✅ Completed |
-| Alembic Migration | ✅ Completed |
-| Repository Layer | ✅ Completed |
-| Service Layer | ✅ Completed |
-| Schemas | 🚧 In Progress |
-| API Endpoints | 🚧 In Progress |
-| Authentication | 🚧 Planned |
-| Authorization (RBAC) | 🚧 Planned |
-| Testing | 🚧 Planned |
+```
+POST   /users/
+
+GET    /users/
+
+GET    /users/{id}
+
+PUT    /users/{id}
+
+PUT    /users/{id}/enable
+
+PUT    /users/{id}/disable
+
+DELETE /users/{id}
+
+GET    /users/search
+
+GET    /users/me
+```
 
 ---
 
-## 👩‍💻 Author
+# Engineering Principles
 
-**Deva Dharshini V**
+This project follows:
 
-GitHub: https://github.com/devadharshini-0707
+- Clean Architecture
+- SOLID Principles
+- Repository Pattern
+- Dependency Injection
+- Strong Typing
+- Layered Design
+- Enterprise Coding Standards
+- RESTful API Design
 
 ---
 
-## 📄 License
+# Repository
 
-This project is developed for learning and enterprise IAM architecture practice.
+GitHub Repository
+
+https://github.com/devadharshini-0707/IAM_Application
+
+---
+
+# Project Status
+
+**Current Version:** v0.1
+
+Completed:
+
+- Authentication Module
+- User Management Module
+
+Currently Working On:
+
+- User Module Enhancements
+
+Next Milestone:
+
+- Role Management
+- Permission Management
+- Group Management
+
+---
+
+# Author
+
+**Deva Dharshini**
+
+Enterprise Identity and Access Management (IAM) Application using FastAPI, React, and PostgreSQL.
