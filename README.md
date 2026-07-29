@@ -2,7 +2,6 @@
 
 A production-style **Identity and Access Management (IAM)** application built using **FastAPI**, **React**, **TypeScript**, and **PostgreSQL** following **Clean Architecture**, **Repository Pattern**, and enterprise software engineering practices.
 
-This project is being developed as an enterprise-grade IAM platform similar to **Okta**, **Keycloak**, **Azure AD**, and **AWS IAM**.
 
 ---
 
